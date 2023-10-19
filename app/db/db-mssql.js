@@ -13,7 +13,7 @@ const config = {
   },
 };
 const pool = new sql.ConnectionPool(config);
-export async function query(sql) {
+async function query(sql) {
   let res = []
   try {
     await pool.connect();
@@ -25,5 +25,52 @@ export async function query(sql) {
     pool.close();
   }
   return res;
+}
+/**
+ * Makes a request to the DB to get the messages a after hour
+ * @param {*} date  Date to search for
+ * @param {*} start: Start hour
+ * @param {*} end: End hour
+ * @return {*} Map: key: hour, value: array of objects with number and message
+ */
+export async function getMessagesReminder(date, start, end){
+  const mapMessages = new Map();
+  try {
+    const sql = `SELECT tu.celular, tm.mensaje, tm.hora, tm.estado, tm.idMensaje 
+          FROM tblUsuario tu
+          LEFT JOIN tblMensaje tm
+          ON tu.idUsuario = tm.idUsuarioDestino
+          WHERE tm.fecha = '${date}'
+          AND tm.estado LIKE 'NO ENVIADO'
+          AND tm.recordado LIKE 'NO'
+          AND tm.hora BETWEEN '${start}' AND '${end}'
+          ORDER BY tm.hora ASC;`;
+    const messages = await query(sql);
+    // console.log('[SQL QUERY]',sql)
+    for(const message of messages){
+      let date = new Date(message.hora);
+      let hour = date.getUTCHours() - 1;
+      hour = hour == -1 ? 23 : hour;
+      let minutes = date.getUTCMinutes();
+      hour = `${ hour > 9 ? '' : '0'}${hour}:${minutes > 9 ? '' : '0'}${minutes}`;
+      if(mapMessages.has(hour)){
+        mapMessages.get(hour).push(message);
+      }else{
+        mapMessages.set(hour, [message]);
+      }
+    }
+  } catch (error) {
+    console.log(error)
+  }
+  return mapMessages;
+}
+export async function updateMessageReminder(idMensaje){
+  try {
+    const sql = `UPDATE tblMensaje SET recordado = 'SI' WHERE idMensaje = ${idMensaje}`;
+    await query(sql);
+    console.log('[RES UPDATE MSSG REMINDER]')
+  } catch (error) {
+    console.log('[ERROR UPDATE MESSAGE REMINDER]',error)
+  }
 }
 
