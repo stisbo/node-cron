@@ -74,3 +74,12 @@ export async function updateMessageReminder(idMensaje){
   }
 }
 
+export async function updateMessageCurrent(idMensaje){
+  try {
+    const sql = `UPDATE tblMensaje SET estado = 'ENVIADO' WHERE idMensaje = ${idMensaje}`;
+    await query(sql);
+    console.log('[RES UPDATE MSSG]')
+  } catch (error) {
+    console.log('[ERROR UPDATE MESSAGE REMINDER]',error)
+  }
+}
