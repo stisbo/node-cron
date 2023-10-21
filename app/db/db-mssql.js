@@ -80,6 +80,40 @@ export async function updateMessageCurrent(idMensaje){
     await query(sql);
     console.log('[RES UPDATE MSSG]')
   } catch (error) {
-    console.log('[ERROR UPDATE MESSAGE REMINDER]',error)
+    console.log('[ERROR UPDATE MESSAGE]',error)
   }
+}
+
+export async function getMessageCurrent(date, start, end){
+  const mapMessages = new Map();
+  try {
+    const sql = `SELECT tu.celular, tm.mensaje, tm.hora, tm.estado, tm.idMensaje 
+    FROM tblUsuario tu
+    LEFT JOIN tblMensaje tm
+    ON tu.idUsuario = tm.idUsuarioDestino
+    WHERE tm.fecha = '${date}'
+    AND tm.estado LIKE 'NO ENVIADO'
+    AND tm.hora BETWEEN '${start}' AND '${end}'
+    ORDER BY tm.hora ASC;`;
+    const messages = await query(sql);
+    // console.log('[SQL QUERY]',sql)
+    for(const message of messages){
+      let date = new Date(message.hora);
+      let hour = date.getUTCHours();
+      let minutes = date.getUTCMinutes();
+      hour = `${ hour > 9 ? '' : '0'}${hour}:${minutes > 9 ? '' : '0'}${minutes}`;
+      if(mapMessages.has(hour)){
+        mapMessages.get(hour).push(message);
+      }else{
+        mapMessages.set(hour, [message]);
+      }
+    }
+  } catch (error) {
+    console.log('[ERROR GET MESSAGES CURRENT]', error)
+  }
+  return mapMessages;
+}
+
+export async function getMessageReminderDay(date, start, end){
+  
 }

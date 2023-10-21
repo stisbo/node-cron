@@ -5,7 +5,7 @@ export async function listenCurrent(dataCurrent, current) {
   console.log('[LISTEN CURRENT]', current)
   try {
     if (dataCurrent.has(current.hour)) {
-      console.log('[SEND MESSAGE REMINDER] Hay mensajes en la hora', current.hour)
+      console.log('[SEND MESSAGE CURRENT] Hay mensajes en la hora', current.hour)
       for (let obj of dataCurrent.get(current.hour)) {
         let res = await requestSendMessage(obj.celular, obj.mensaje);
         console.log(res)
