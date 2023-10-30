@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app/index.js"
+    "start": "node app/index.js",
+    "app-up": "npx pm2 start app/index.js --name mensajero",
+    "app-down": "npx pm2 stop mensajero"
   },
   "author": "coderoycc",
   "license": "ISC",
@@ -16,6 +18,7 @@
     "moment-timezone": "^0.5.43",
     "mssql": "^10.0.1",
     "mysql2": "^3.6.2",
-    "node-cron": "^3.0.2"
+    "node-cron": "^3.0.2",
+    "pm2": "^5.3.0"
   }
 }
