@@ -64,6 +64,25 @@ export async function getMessagesReminder(date, start, end){
   }
   return mapMessages;
 }
+
+export async function getMessageReminderDay(date, start, end){
+  const mapMessages = new Map();
+
+  try {
+    const sql = `
+    SELECT tu.celular, tm.mensaje, tr.hora, tr.fecha FROM tblRecordatorio tr
+    INNER JOIN tblMensaje tm ON tr.idMensaje = tm.idMensaje
+    INNER JOIN tblUsuario tu ON tu.idUsuario = tm.idUsuarioDestino
+    WHERE tr.estado LIKE 'NO ENVIADO' AND tr.fecha = '${date}'
+    AND tr.hora BETWEEN '${start}' AND '${end}' 
+    ORDER BY tr.hora;`;
+    const messages = await query(sql);
+    mapMessages = mapMessagesFun(messages);
+  } catch (error) {
+    console.log('[ERROR REMINDER DAY DB]', error)
+  }
+  return mapMessages;
+}
 export async function updateMessageReminder(idMensaje){
   try {
     const sql = `UPDATE tblMensaje SET recordado = 'SI' WHERE idMensaje = ${idMensaje}`;
@@ -97,23 +116,24 @@ export async function getMessageCurrent(date, start, end){
     ORDER BY tm.hora ASC;`;
     const messages = await query(sql);
     // console.log('[SQL QUERY]',sql)
-    for(const message of messages){
-      let date = new Date(message.hora);
-      let hour = date.getUTCHours();
-      let minutes = date.getUTCMinutes();
-      hour = `${ hour > 9 ? '' : '0'}${hour}:${minutes > 9 ? '' : '0'}${minutes}`;
-      if(mapMessages.has(hour)){
-        mapMessages.get(hour).push(message);
-      }else{
-        mapMessages.set(hour, [message]);
-      }
-    }
+    mapMessages = mapMessagesFun(messages);
   } catch (error) {
     console.log('[ERROR GET MESSAGES CURRENT]', error)
   }
   return mapMessages;
 }
 
-export async function getMessageReminderDay(date, start, end){
-  
+function mapMessagesFun(messages){
+  const mapMessages = Map();
+  for(const message of messages){
+    let date = new Date(message.hora);
+    let hour = date.getUTCHours();
+    let minutes = date.getUTCMinutes();
+    hour = `${ hour > 9 ? '' : '0'}${hour}:${minutes > 9 ? '' : '0'}${minutes}`;
+    if(mapMessages.has(hour)){
+      mapMessages.get(hour).push(message);
+    }else{
+      mapMessages.set(hour, [message]);
+    }
+  }
 }
